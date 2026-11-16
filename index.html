@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stop Caring - Now powered by AI!</title>
+<style>
+* { box-sizing:border-box }
+:root { color-scheme:light; font:16px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#26251f; background:#faf9f5 }
+body { margin:0; height:100vh; height:100dvh; display:flex; flex-direction:column }
+header { display:flex; align-items:center; justify-content:space-between; padding:17px clamp(18px,5vw,72px); border-bottom:1px solid #deddd4 }
+.brand { display:flex; align-items:center; gap:10px; font-weight:750; letter-spacing:-.04em }
+.mark { background:#d6f984; color:#26320d; width:34px; height:34px; display:inline-grid; place-items:center; border-radius:10px; font:bold 20px monospace }
+button,textarea { font:inherit }
+button { cursor:pointer }
+#reset { border:1px solid #cecec3; border-radius:22px; background:transparent; padding:6px 16px }
+main { flex:1; overflow:auto; min-height:0; display:flex; flex-direction:column }
+#intro { margin:auto; padding:48px 20px; text-align:center }
+#intro .mark { width:68px; height:68px; border-radius:21px; font-size:36px; transform:rotate(-5deg) }
+h1 { margin:20px 0 12px; font:500 clamp(38px,6vw,76px)/1.05 Georgia,serif; letter-spacing:-.055em }
+h1 span { display:block; font-style:italic }
+#intro p { color:#65645c }
+#log,footer { width:min(100%,760px); margin-inline:auto; padding-inline:20px }
+#log { display:grid; gap:22px; padding-block:28px }
+#log:empty { display:none }
+.message { margin:0; white-space:pre-wrap; overflow-wrap:anywhere }
+.user { justify-self:end; max-width:85%; border-radius:20px 20px 4px 20px; padding:11px 17px; background:#e9e8df }
+.assistant { display:flex; align-items:center; gap:12px }
+.assistant::before { content:'−'; flex:none; border-radius:8px; width:28px; text-align:center; background:#d6f984; font-weight:bold }
+.pending span { animation:pulse 1.1s ease-in-out infinite alternate }
+@keyframes pulse { to { opacity:.35 } }
+@media(prefers-reduced-motion:reduce) { .pending span { animation:none } }
+footer { padding-block:12px max(22px,env(safe-area-inset-bottom)); }
+form { padding:12px; display:flex; align-items:flex-end; gap:8px; background:white; border:1px solid #cfcec4; border-radius:24px; box-shadow:0 5px 20px #29261709 }
+textarea { width:100%; resize:none; padding:7px; border:none; background:transparent; color:inherit }
+form:focus-within { outline:2px solid #798652 }
+textarea:focus { outline:none }
+#send { background:#303329; color:white; border:none; border-radius:50%; width:40px; height:40px; flex:none; font-size:23px }
+#send:disabled { opacity:.45; cursor:default }
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="mark" aria-hidden="true">−</span>Stop Caring</div><button id="reset" type="button">＋ New chat</button></header>
+<main>
+<section id="intro"><span class="mark" aria-hidden="true">−</span><h1>Stop Caring - <span>Now powered by AI!</span></h1><p>What do you care about?</p></section>
+<div id="log" role="log" aria-label="Conversation" aria-live="polite"></div>
+</main>
+<footer><form><textarea rows="1" aria-label="Your message" placeholder="Tell me what you care about…"></textarea><button id="send" aria-label="Send message" disabled>↑</button></form></footer>
+<script>
+const form = document.querySelector('form');
+const input = form.querySelector('textarea');
+const send = document.querySelector('#send');
+const intro = document.querySelector('#intro');
+const log = document.querySelector('#log');
+let timer;
+function updateSend() {
+  send.disabled = timer !== undefined || !input.value.trim();
+}
+function appendMessage(style, text) {
+  const row = document.createElement('p');
+  row.className = 'message ' + style;
+  const content = document.createElement('span');
+  content.textContent = text;
+  row.append(content);
+  log.append(row);
+  row.scrollIntoView({block:'nearest'});
+  return row;
+}
+input.addEventListener('input', updateSend);
+input.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+    event.preventDefault();
+    form.requestSubmit();
+  }
+});
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  const message = input.value.trim();
+  if (!message || timer !== undefined) return;
+  intro.hidden = true;
+  appendMessage('user', message);
+  input.value = '';
+  const pending = appendMessage('assistant pending', 'Thinking…');
+  timer = setTimeout(() => {
+    pending.remove();
+    appendMessage('assistant', 'Stop caring about that!');
+    timer = undefined;
+    updateSend();
+  }, 3000 + Math.floor(Math.random() * 5001));
+  updateSend();
+  input.focus();
+});
+document.querySelector('#reset').addEventListener('click', () => {
+  clearTimeout(timer);
+  timer = undefined;
+  log.replaceChildren();
+  intro.hidden = false;
+  input.value = '';
+  updateSend();
+  input.focus();
+});
+</script>
+</body>
+</html>
