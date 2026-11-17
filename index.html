@@ -53,6 +53,27 @@ const send = document.querySelector('#send');
 const intro = document.querySelector('#intro');
 const log = document.querySelector('#log');
 let timer;
+const acceptableTopics = [
+  { pattern: /\btrains?\b/i, reply: 'trains are acceptable things to care about' },
+  { pattern: /\bpublic[\s-]+transit\b/i, reply: 'public transit is an acceptable thing to care about' },
+  { pattern: /\b(?:air)?planes?\b/i, reply: 'planes are acceptable things to care about' },
+  { pattern: /\blgbtq(?:ia?)?\b/i, reply: 'LGBTQ is an acceptable thing to care about' }
+];
+
+function replyTo(message) {
+  const topic = message.trim()
+    .replace(/^(?:(?:i|we)\s+(?:really\s+)?(?:care|worry)\s+about|i(?:['’]m|\s+am)\s+(?:worried|concerned)\s+about|(?:should|can)\s+i\s+care\s+about|what\s+about)(?:\s+|$)/i, '')
+    .replace(/[.!?,;:\s]+$/g, '')
+    .replace(/\s+/g, ' ');
+
+  // Name the exception itself, even when it appears in a longer message.
+  const accepted = acceptableTopics.find(({pattern}) => pattern.test(topic));
+  if (accepted) return accepted.reply;
+
+  const subject = topic.replace(/\bmy\b/gi, 'your').replace(/\bour\b/gi, 'your');
+  return 'stop caring about ' + (subject || 'that') + '!';
+}
+
 function updateSend() {
   send.disabled = timer !== undefined || !input.value.trim();
 }
@@ -83,7 +104,7 @@ form.addEventListener('submit', event => {
   const pending = appendMessage('assistant pending', 'Thinking…');
   timer = setTimeout(() => {
     pending.remove();
-    appendMessage('assistant', 'Stop caring about that!');
+    appendMessage('assistant', replyTo(message));
     timer = undefined;
     updateSend();
   }, 3000 + Math.floor(Math.random() * 5001));
